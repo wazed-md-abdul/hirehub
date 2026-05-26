@@ -75,13 +75,13 @@ const Navbar = () => {
                         {/* Auth Buttons */}
                         <div className="flex items-center gap-5 border-l border-white/10 pl-6">
                             <Link
-                                href="/signin"
+                                href="/auth/signin"
                                 className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-md px-2 py-1"
                             >
                                 Sign In
                             </Link>
                             <Link
-                                href="/signup"
+                                href="/auth/signup"
                                 className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-all duration-200 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/50"
                             >
                                 Get Started
