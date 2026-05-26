@@ -177,7 +177,7 @@ const SignInPage = () => {
                 {/* Back to Sign Up Link */}
                 <div className="mt-8 text-center border-t border-white/5 pt-6">
                     <p className="text-[#8A8A93] text-sm">
-                        Don't have an account?{" "}
+                        {"Don't"} have an account?{" "}
                         <Link
                             href="/signup"
                             className="text-violet-400 hover:text-violet-300 font-medium transition-colors"

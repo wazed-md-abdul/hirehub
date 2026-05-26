@@ -1,15 +1,25 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { HiMenu, HiX } from "react-icons/hi";
 import { FiCode } from "react-icons/fi";
+import { useSession, authClient } from "@/lib/auth-client";
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+    const { data: session, isPending } = useSession();
+    console.log(session);
+
+
+    const handleSignOut = async () => {
+        await authClient.signOut();
+        router.refresh();
+
+    };
 
     // Apply glassmorphism effect on scroll
     useEffect(() => {
@@ -73,20 +83,53 @@ const Navbar = () => {
                         </ul>
 
                         {/* Auth Buttons */}
-                        <div className="flex items-center gap-5 border-l border-white/10 pl-6">
-                            <Link
-                                href="/auth/signin"
-                                className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-md px-2 py-1"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                href="/auth/signup"
-                                className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-all duration-200 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/50"
-                            >
-                                Get Started
-                            </Link>
-                        </div>
+                        {isPending ? (
+                            <div className="flex items-center gap-4 border-l border-white/10 pl-6 animate-pulse">
+                                <div className="h-4 w-12 bg-white/10 rounded"></div>
+                                <div className="h-9 w-24 bg-white/10 rounded-lg"></div>
+                            </div>
+                        ) : session?.user ? (
+                            <div className="flex items-center gap-4 border-l border-white/10 pl-6">
+                                <div className="flex items-center gap-2.5">
+                                    {session.user.image ? (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img
+                                            src={session.user.image}
+                                            alt={session.user.name || "User"}
+                                            className="w-8 h-8 rounded-full border border-white/10 object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-xs font-semibold shadow-md">
+                                            {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="text-xs text-gray-300 font-medium max-w-[100px] truncate">
+                                        {session.user.name || "User"}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={handleSignOut}
+                                    className="px-4 py-2 rounded-lg border border-white/10 text-white text-xs font-semibold hover:bg-white/5 hover:border-white/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-5 border-l border-white/10 pl-6">
+                                <Link
+                                    href="/auth/signin"
+                                    className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50 rounded-md px-2 py-1"
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    href="/auth/signup"
+                                    className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-all duration-200 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                >
+                                    Get Started
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     {/* Mobile Menu Toggle Button */}
@@ -128,20 +171,63 @@ const Navbar = () => {
                     <li aria-hidden="true" className="h-px w-full bg-white/10 my-3"></li>
 
                     <li className="flex flex-col gap-3 px-4 pt-1">
-                        <Link
-                            href="/signin"
-                            className="text-sm font-medium text-center text-violet-400 py-2.5 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-violet-500/30"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Sign In
-                        </Link>
-                        <Link
-                            href="/signup"
-                            className="text-sm font-semibold text-center bg-white text-black py-3 rounded-lg hover:bg-gray-100 transition-colors"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Get Started
-                        </Link>
+                        {isPending ? (
+                            <div className="flex flex-col gap-3">
+                                <div className="h-10 bg-white/5 border border-white/5 rounded-lg w-full animate-pulse"></div>
+                                <div className="h-10 bg-white/5 border border-white/5 rounded-lg w-full animate-pulse"></div>
+                            </div>
+                        ) : session?.user ? (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-lg border border-white/5">
+                                    {session.user.image ? (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img
+                                            src={session.user.image}
+                                            alt={session.user.name || "User"}
+                                            className="w-9 h-9 rounded-full border border-white/10 object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-sm font-semibold">
+                                            {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-sm text-white font-semibold truncate">
+                                            {session.user.name || "User"}
+                                        </span>
+                                        <span className="text-xs text-gray-400 truncate">
+                                            {session.user.email}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setIsOpen(false);
+                                        handleSignOut();
+                                    }}
+                                    className="w-full text-center text-sm font-semibold bg-transparent border border-white/10 text-white py-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/auth/signin"
+                                    className="text-sm font-medium text-center text-violet-400 py-2.5 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-violet-500/30"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    href="/auth/signup"
+                                    className="text-sm font-semibold text-center bg-white text-black py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Get Started
+                                </Link>
+                            </>
+                        )}
                     </li>
                 </ul>
             </div>
