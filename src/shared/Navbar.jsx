@@ -12,7 +12,7 @@ const Navbar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const { data: session, isPending } = useSession();
-    console.log(session);
+    const role = session?.user?.role;
 
 
     const handleSignOut = async () => {
@@ -35,7 +35,7 @@ const Navbar = () => {
         { name: "Browse Jobs", href: "/jobs" },
         { name: "Companies", href: "/companies" },
         { name: "Pricing", href: "/pricing" },
-        { name: "Dashboard", href: "/dashboard" },
+        { name: "Dashboard", href: `/dashboard/${role}` },
     ];
 
     return (

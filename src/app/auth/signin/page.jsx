@@ -33,13 +33,13 @@ const SignInPage = () => {
 
         try {
 
-            const { data, error: authError } = await authClient.signIn.email({
+            const { data, error } = await authClient.signIn.email({
                 email: formData.email,
                 password: formData.password,
             });
 
-            if (authError) {
-                setError(authError.message || "Invalid email or password.");
+            if (error) {
+                setError(error.message || "Invalid email or password.");
                 setLoading(false);
                 return;
             }

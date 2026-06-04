@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,15 +6,14 @@ import { FiUser, FiMail, FiLock, FiImage, FiEye, FiEyeOff, FiCode } from "react-
 import { authClient } from "@/lib/auth-client";
 
 
-
 const SignUpPage = () => {
     const router = useRouter();
-
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         image: "", // We'll use a string URL for simplicity. Better Auth also accepts a File object.
         password: "",
+        role: "seeker",
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +23,7 @@ const SignUpPage = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        console.log(formData);
     };
 
     const handleSubmit = async (e) => {
@@ -35,15 +34,19 @@ const SignUpPage = () => {
 
         try {
 
-            const { data, error: authError } = await authClient.signUp.email({
+            const { data, error } = await authClient.signUp.email({
                 email: formData.email,
                 password: formData.password,
                 name: formData.name,
                 image: formData.image || undefined,
-            });
+                role: formData.role,
 
-            if (authError) {
-                setError(authError.message || "Failed to create account.");
+            });
+            console.log("Response Data:", data);
+            console.log("Response Error:", error);
+
+            if (error) {
+                setError(error.message || "Failed to create account.");
                 setLoading(false);
                 return;
             }
@@ -51,13 +54,14 @@ const SignUpPage = () => {
 
             // --- Remove this simulated delay when using real auth ---
             await new Promise(resolve => setTimeout(resolve, 1500));
+
             // --------------------------------------------------------
 
             setSuccess("Account created successfully! Redirecting...");
 
             // Redirect to dashboard or login
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push("/auth/signin");
             }, 2000);
 
         } catch (err) {
@@ -150,7 +154,53 @@ const SignUpPage = () => {
                             placeholder="Profile Image URL (optional)"
                         />
                     </div>
+                    {/* Role Selection */}
+                    <div className="space-y-2 pl-1">
+                        <span className="text-[#8A8A93] text-sm font-medium">Join as:</span>
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Seeker Option */}
+                            <label
+                                className={`flex flex-col p-4 rounded-xl border cursor-pointer transition-all duration-200 select-none ${formData.role === "seeker"
+                                    ? "bg-violet-600/10 border-violet-500 shadow-[0_0_15px_rgba(124,58,237,0.15)]"
+                                    : "bg-[#0C0C10] border-white/10 hover:border-white/20"
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="seeker"
+                                    checked={formData.role === "seeker"}
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                    className="sr-only"
+                                />
+                                <span className="text-white font-semibold text-sm mb-1">Seeker</span>
+                                <span className="text-[#8A8A93] text-[11px] leading-normal">
+                                    Looking for a job
+                                </span>
+                            </label>
 
+                            {/* Recruiter Option */}
+                            <label
+                                className={`flex flex-col p-4 rounded-xl border cursor-pointer transition-all duration-200 select-none ${formData.role === "recruiter"
+                                    ? "bg-violet-600/10 border-violet-500 shadow-[0_0_15px_rgba(124,58,237,0.15)]"
+                                    : "bg-[#0C0C10] border-white/10 hover:border-white/20"
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="recruiter"
+                                    checked={formData.role === "recruiter"}
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                    className="sr-only"
+                                />
+                                <span className="text-white font-semibold text-sm mb-1">Recruiter</span>
+                                <span className="text-[#8A8A93] text-[11px] leading-normal">
+                                    Recruiting for a job
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                     {/* Password Input */}
                     <div className="relative group">
                         <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8A8A93] group-focus-within:text-violet-500 transition-colors text-lg" />
