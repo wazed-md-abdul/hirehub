@@ -11,6 +11,7 @@ import { authClient } from "@/lib/auth-client";
 const SignInPage = () => {
     const router = useRouter();
 
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -33,6 +34,10 @@ const SignInPage = () => {
 
         try {
 
+
+
+
+
             const { data, error } = await authClient.signIn.email({
                 email: formData.email,
                 password: formData.password,
@@ -52,7 +57,7 @@ const SignInPage = () => {
 
             // Redirect to dashboard
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push(`/`);
             }, 2000);
 
         } catch (err) {

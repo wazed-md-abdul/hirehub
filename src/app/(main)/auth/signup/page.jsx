@@ -42,8 +42,6 @@ const SignUpPage = () => {
                 role: formData.role,
 
             });
-            console.log("Response Data:", data);
-            console.log("Response Error:", error);
 
             if (error) {
                 setError(error.message || "Failed to create account.");
@@ -51,6 +49,7 @@ const SignUpPage = () => {
                 return;
             }
 
+            await authClient.signOut();
 
             // --- Remove this simulated delay when using real auth ---
             await new Promise(resolve => setTimeout(resolve, 1500));

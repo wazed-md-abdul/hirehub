@@ -29,7 +29,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   return (
-    <aside className={`w-64 bg-[#09090B] border-r border-white/5 flex flex-col h-full shrink-0 z-20 fixed lg:relative inset-y-0 left-0 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
+    <aside className={`w-64 bg-[#09090B] border-r border-white/5 flex flex-col h-full shrink-0 z-50 fixed lg:relative inset-y-0 left-0 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
       {/* Logo */}
       <div className="p-6 border-b border-white/5 flex items-center justify-between">

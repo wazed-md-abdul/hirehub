@@ -7,7 +7,7 @@ const DashboardLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex bg-[#09090B] relative">
+        <div className="flex bg-[#09090B] relative ">
             {/* Backdrop for mobile */}
             {isSidebarOpen && (
                 <div
