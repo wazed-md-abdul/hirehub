@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navLinks = [
     { name: "Dashboard", href: "/dashboard/recruiter", icon: FiGrid },
     { name: "My Company", href: "#", icon: FiHome },
-    { name: "Manage Jobs", href: "#", icon: FiBriefcase },
+    { name: "Manage Jobs", href: "/dashboard/recruiter/jobs", icon: FiBriefcase },
     { name: "Applications", href: "#", icon: FiUsers },
     { name: "Settings", href: "#", icon: FiSettings },
   ];

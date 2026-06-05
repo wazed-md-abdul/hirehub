@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { FiArrowLeft, FiBriefcase, FiDollarSign, FiMapPin, FiCalendar, FiFileText } from "react-icons/fi";
+import { createJob } from "@/lib/actions/jobs";
 
 const NewJobPage = () => {
   const initialFormState = {
@@ -30,14 +31,26 @@ const NewJobPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Console log the form data as requested
-    console.log("Submitting Job Post Data:", {
+
+    const payload = {
       ...formData,
       company: "TechFlow Inc.", // Auto-filled mock company
-    });
+      companyId: 'company_123',
+      status: 'active',
+      isPubliclyVisible: true,
+    };
+
+
+    const response = await createJob(payload);
+
+    if (response.acknowledged === true) {
+      alert("Job posted successfully!");
+    } else {
+      alert("Failed to post job. Please try again.");
+    }
 
     // Reset the form state / refresh the page fields
     setFormData(initialFormState);

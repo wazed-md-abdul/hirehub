@@ -23,16 +23,6 @@ const Header = ({ onMenuClick }) => {
         >
           <FiMenu className="text-lg" />
         </button>
-
-        {/* Search Input */}
-        <div className="relative w-full max-w-md group hidden sm:block">
-          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8A8A93] group-focus-within:text-violet-500 transition-colors text-lg" />
-          <input
-            type="text"
-            placeholder="Search applications, jobs, or talent..."
-            className="w-full bg-[#121217] border border-white/5 rounded-xl py-2.5 pl-12 pr-4 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 transition-all placeholder:text-[#6B6B75] text-sm"
-          />
-        </div>
       </div>
 
       {/* Right Actions */}
