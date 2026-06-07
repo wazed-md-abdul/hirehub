@@ -18,7 +18,8 @@ import {
   FiDollarSign,
   FiCalendar,
   FiZap,
-  FiAlertCircle
+  FiAlertCircle,
+  FiClock
 } from "react-icons/fi";
 
 const ManageJobsPage = () => {
@@ -33,6 +34,7 @@ const ManageJobsPage = () => {
   const [jobToDelete, setJobToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isPendingAlertOpen, setIsPendingAlertOpen] = useState(false);
 
   const router = useRouter();
   const userId = session?.user?.id;
@@ -122,6 +124,8 @@ const ManageJobsPage = () => {
   const handlePostJobClick = () => {
     if (!company) {
       setIsAlertOpen(true);
+    } else if (company.status === "pending") {
+      setIsPendingAlertOpen(true);
     } else {
       router.push("/dashboard/recruiter/jobs/new");
     }
@@ -413,6 +417,48 @@ const ManageJobsPage = () => {
                 className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer"
               >
                 Register Company
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Shadcn UI Alert for Pending Approval */}
+      {isPendingAlertOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            onClick={() => setIsPendingAlertOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="bg-[#121217] border border-white/10 rounded-[24px] w-full max-w-md p-6 md:p-8 z-10 shadow-2xl relative text-white space-y-6">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#8A8A93]">
+                <FiClock className="w-6 h-6 text-amber-400 animate-pulse" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Company Approval Pending</h2>
+              <p className="text-sm text-[#8A8A93] leading-relaxed">
+                Your company <span className="text-white font-semibold">{company?.name}</span> is not approved. You can't post a job right now. Please wait to be approved.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsPendingAlertOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPendingAlertOpen(false);
+                  router.push("/dashboard/recruiter/company");
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                View Status
               </button>
             </div>
           </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { getCompanies } from "@/lib/actions/companies";
 import { createJob } from "@/lib/actions/jobs";
-import { FiArrowLeft, FiBriefcase, FiDollarSign, FiMapPin, FiCalendar, FiFileText, FiAlertCircle } from "react-icons/fi";
+import { FiArrowLeft, FiBriefcase, FiDollarSign, FiMapPin, FiCalendar, FiFileText, FiAlertCircle, FiClock } from "react-icons/fi";
 
 const NewJobPage = () => {
   const { data: session, isPending: sessionPending } = useSession();
@@ -64,7 +64,7 @@ const NewJobPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!company) {
+    if (!company || company.status === "pending") {
       return;
     }
 
@@ -130,6 +130,30 @@ const NewJobPage = () => {
             className="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-sm transition-all focus:outline-none cursor-pointer"
           >
             Go to Company Registration
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (company.status === "pending") {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="max-w-md w-full bg-[#121217] border border-white/5 rounded-[24px] p-8 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+            <FiClock className="w-8 h-8 text-amber-400 animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold">Company Approval Pending</h2>
+            <p className="text-sm text-[#8A8A93] leading-relaxed">
+              Your company <span className="text-white font-semibold">{company.name}</span> is not approved. You can't post a job right now. Please wait to be approved.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/recruiter/company")}
+            className="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-sm transition-all focus:outline-none cursor-pointer"
+          >
+            Check Company Status
           </button>
         </div>
       </div>
