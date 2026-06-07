@@ -22,3 +22,24 @@ export const getCompanies = async (userId) => {
     });
     return res.json();
 };
+
+export const updateCompany = async (id, updatedCompanyData) => {
+    const res = await fetch(`${baseUrl}/api/companies/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedCompanyData)
+    });
+    return res.json();
+};
+
+export const deleteCompany = async (id) => {
+    const res = await fetch(`${baseUrl}/api/companies/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    return res.json();
+};

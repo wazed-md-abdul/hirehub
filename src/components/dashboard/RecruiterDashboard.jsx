@@ -89,10 +89,10 @@ const RecruiterDashboard = () => {
   ];
 
   return (
-    <div className="p-8 bg-[#09090B] space-y-10 relative">
+    <div className="p-4 sm:p-6 md:p-8 bg-[#09090B] space-y-6 md:space-y-10 relative">
       {/* Welcome Heading */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
           Welcome back, {userName}
         </h1>
       </div>
@@ -104,7 +104,7 @@ const RecruiterDashboard = () => {
           return (
             <div
               key={index}
-              className="bg-[#121217] border border-white/5 rounded-2xl p-6 flex flex-col justify-between transition-all hover:border-white/10"
+              className="bg-[#121217] border border-white/5 rounded-2xl p-5 md:p-6 flex flex-col justify-between transition-all hover:border-white/10"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[#8A8A93] text-sm font-medium">
@@ -114,7 +114,7 @@ const RecruiterDashboard = () => {
                   <Icon className="w-4 h-4 text-violet-400" />
                 </div>
               </div>
-              <span className="text-white text-3xl font-bold">{stat.value}</span>
+              <span className="text-white text-2xl md:text-3xl font-bold">{stat.value}</span>
             </div>
           );
         })}
@@ -123,7 +123,7 @@ const RecruiterDashboard = () => {
       {/* Grid of details */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Recent Applications Table (Left column) */}
-        <div className="xl:col-span-8 bg-[#121217] border border-white/5 rounded-[24px] p-6 flex flex-col">
+        <div className="xl:col-span-8 bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-white font-bold text-lg">Recent Applications</h2>
             <button className="text-violet-400 hover:text-violet-300 text-xs font-medium transition-colors">
@@ -174,7 +174,7 @@ const RecruiterDashboard = () => {
         </div>
 
         {/* My Top Companies List (Right column) */}
-        <div className="xl:col-span-4 bg-[#121217] border border-white/5 rounded-[24px] p-6 flex flex-col justify-between">
+        <div className="xl:col-span-4 bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-white font-bold text-lg">My Top Companies</h2>

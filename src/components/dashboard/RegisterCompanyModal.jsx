@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { FiX, FiMapPin, FiUpload } from "react-icons/fi";
 
-const RegisterCompanyModal = ({ isOpen, onClose, onSubmit }) => {
+const RegisterCompanyModal = ({ isOpen, onClose, onSubmit, initialData }) => {
   const initialFormState = {
     name: "",
     industry: "Technology",
@@ -16,6 +16,24 @@ const RegisterCompanyModal = ({ isOpen, onClose, onSubmit }) => {
 
   const [formData, setFormData] = useState(initialFormState);
   const [uploading, setUploading] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          name: initialData.name || "",
+          industry: initialData.industry || "Technology",
+          website: initialData.website || "",
+          location: initialData.location || "",
+          employees: initialData.employees || "1-10 employees",
+          logo: initialData.logo || "",
+          description: initialData.description || "",
+        });
+      } else {
+        setFormData(initialFormState);
+      }
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
@@ -101,9 +119,11 @@ const RegisterCompanyModal = ({ isOpen, onClose, onSubmit }) => {
 
         {/* Form Header */}
         <div className="p-6 md:p-8 border-b border-white/5">
-          <h2 className="text-xl font-bold text-white">Register New Company</h2>
+          <h2 className="text-xl font-bold text-white">
+            {initialData ? "Edit Company Details" : "Register New Company"}
+          </h2>
           <p className="text-xs text-[#8A8A93] mt-1">
-            Enter your business details to start hiring on HireLoop.
+            {initialData ? "Modify your business details below." : "Enter your business details to start hiring on HireLoop."}
           </p>
         </div>
 
@@ -279,7 +299,7 @@ const RegisterCompanyModal = ({ isOpen, onClose, onSubmit }) => {
               disabled={uploading}
               className="px-6 py-2.5 rounded-xl bg-white hover:bg-gray-100 disabled:bg-gray-500 text-black text-sm font-bold transition-all active:scale-[0.98] focus:outline-none cursor-pointer"
             >
-              Register Company
+              {initialData ? "Save Changes" : "Register Company"}
             </button>
           </div>
         </form>

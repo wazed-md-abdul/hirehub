@@ -2,6 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
+import { getCompanies } from "@/lib/actions/companies";
+import { getJobs } from "@/lib/api/jobs";
+import { deleteJob, updateJob } from "@/lib/actions/jobs";
+import UpdateJobModal from "@/components/dashboard/UpdateJobModal";
 import {
   FiSearch,
   FiPlus,
@@ -14,49 +20,111 @@ import {
   FiZap,
   FiAlertCircle
 } from "react-icons/fi";
-import { getJobs } from "@/lib/api/jobs";
-import { deleteJob } from "@/lib/actions/jobs";
 
 const ManageJobsPage = () => {
+  const { data: session, isPending: sessionPending } = useSession();
   const [jobs, setJobs] = useState([]);
+  const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
+  const router = useRouter();
+  const userId = session?.user?.id;
+
+  const fetchCompanyAndJobs = async () => {
+    if (!userId) return;
+    setLoading(true);
+    try {
+      const companyData = await getCompanies(userId);
+      if (companyData && companyData.length > 0) {
+        const activeCompany = companyData[0];
+        setCompany(activeCompany);
+        const jobsData = await getJobs(activeCompany._id);
+        setJobs(jobsData || []);
+      } else {
+        setCompany(null);
+        setJobs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching company or jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        // Fetch jobs for 'company_123'
-        const data = await getJobs("company_123");
-        setJobs(data || []);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
-  }, []);
+    if (!sessionPending && userId) {
+      fetchCompanyAndJobs();
+    }
+  }, [userId, sessionPending]);
 
-  const handleDelete = async (jobId) => {
-    if (confirm("Are you sure you want to delete this job post?")) {
-      try {
-        const response = await deleteJob(jobId);
-        // MongoDB deletedCount is typically returned in backend responses, or look for acknowledgment
-        if (response.deletedCount > 0 || response.acknowledged || response.success) {
-          alert("Job deleted successfully!");
-          setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
-        } else {
-          alert("Failed to delete job post. Please try again.");
-        }
-      } catch (error) {
-        console.error("Failed to delete job:", error);
-        alert("Error occurred while deleting the job.");
+  const handleDeleteTrigger = (jobId) => {
+    setJobToDelete(jobId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!jobToDelete) return;
+    setDeleting(true);
+    try {
+      const response = await deleteJob(jobToDelete);
+      if (response.deletedCount > 0 || response.acknowledged || response.success) {
+        setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobToDelete));
+        setIsDeleteDialogOpen(false);
+        setJobToDelete(null);
+      } else {
+        alert("Failed to delete job post. Please try again.");
       }
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      alert("Error occurred while deleting the job.");
+    } finally {
+      setDeleting(false);
     }
   };
 
   const handleUpdateClick = (job) => {
-    alert(`Update functionality modal coming soon!\nJob Title: ${job.title}\nJob ID: ${job._id}`);
+    setSelectedJob(job);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateSubmit = async (updatedData) => {
+    if (!selectedJob?._id) return;
+    try {
+      const payload = {
+        ...updatedData,
+        company: company,
+        companyName: company.name,
+        companyLogo: company.logo,
+        companyId: company._id,
+      };
+
+      const response = await updateJob(selectedJob._id, payload);
+      if (response.acknowledged || response.modifiedCount > 0 || response.success) {
+        setIsUpdateModalOpen(false);
+        setSelectedJob(null);
+        await fetchCompanyAndJobs();
+      } else {
+        alert("Failed to update job. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to update job:", error);
+      alert("Error occurred while updating the job.");
+    }
+  };
+
+  const handlePostJobClick = () => {
+    if (!company) {
+      setIsAlertOpen(true);
+    } else {
+      router.push("/dashboard/recruiter/jobs/new");
+    }
   };
 
   // Filter jobs based on search query
@@ -71,8 +139,30 @@ const ManageJobsPage = () => {
     );
   });
 
+  if (sessionPending) {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+          <p className="text-xs text-[#8A8A93]">Loading details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="text-center space-y-4">
+          <h2 className="text-xl font-bold">Access Denied</h2>
+          <p className="text-sm text-[#8A8A93]">Please sign in to manage your jobs.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-6 md:p-8 bg-[#09090B] space-y-6 min-h-screen">
+    <div className="flex-1 p-4 sm:p-6 md:p-8 bg-[#09090B] space-y-6 min-h-screen text-white relative">
       {/* Header and Add Job Link */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -81,16 +171,17 @@ const ManageJobsPage = () => {
             Monitor, update, and manage your organization's open roles.
           </p>
         </div>
-        <Link href="/dashboard/recruiter/jobs/new">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black font-semibold text-sm transition-all active:scale-95 focus:outline-none cursor-pointer">
-            <FiPlus className="w-4 h-4" />
-            Post New Job
-          </button>
-        </Link>
+        <button
+          onClick={handlePostJobClick}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black font-semibold text-sm transition-all active:scale-95 focus:outline-none cursor-pointer"
+        >
+          <FiPlus className="w-4 h-4" />
+          Post New Job
+        </button>
       </div>
 
       {/* Main Content Card */}
-      <div className="max-w-7xl mx-auto bg-[#121217] border border-white/5 rounded-[24px] p-6 space-y-6">
+      <div className="max-w-7xl mx-auto bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 space-y-6">
 
         {/* Search Bar container */}
         <div className="relative w-full max-w-md group">
@@ -192,7 +283,7 @@ const ManageJobsPage = () => {
 
                     {/* Status */}
                     <td className="py-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
                         <FiZap className="w-3 h-3" />
                         Active
                       </span>
@@ -204,14 +295,14 @@ const ManageJobsPage = () => {
                         <button
                           onClick={() => handleUpdateClick(job)}
                           title="Edit Job"
-                          className="p-2 rounded-lg bg-white/5 border border-white/5 text-[#8A8A93] hover:text-white hover:border-white/10 hover:bg-white/10 transition-all focus:outline-none"
+                          className="p-2 rounded-lg bg-white/5 border border-white/5 text-[#8A8A93] hover:text-white hover:border-white/10 hover:bg-white/10 transition-all focus:outline-none cursor-pointer"
                         >
                           <FiEdit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(job._id)}
+                          onClick={() => handleDeleteTrigger(job._id)}
                           title="Delete Job"
-                          className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all focus:outline-none"
+                          className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all focus:outline-none cursor-pointer"
                         >
                           <FiTrash2 className="w-3.5 h-3.5" />
                         </button>
@@ -224,6 +315,109 @@ const ManageJobsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Update Job Modal */}
+      <UpdateJobModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          setSelectedJob(null);
+        }}
+        onSubmit={handleUpdateSubmit}
+        jobData={selectedJob}
+      />
+
+      {/* Custom Delete Dialog */}
+      {isDeleteDialogOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setJobToDelete(null);
+            }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="bg-[#121217] border border-white/10 rounded-[24px] w-full max-w-md p-6 md:p-8 z-10 shadow-2xl relative text-white space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-white">Delete Job Post</h2>
+              <p className="text-sm text-[#8A8A93] leading-relaxed">
+                Are you sure you want to delete this job posting? This action is permanent and cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setJobToDelete(null);
+                }}
+                className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteConfirm}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border border-white border-t-transparent animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete Job"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Shadcn UI Alert Dialog */}
+      {isAlertOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            onClick={() => setIsAlertOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="bg-[#121217] border border-white/10 rounded-[24px] w-full max-w-md p-6 md:p-8 z-10 shadow-2xl relative text-white space-y-6">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <FiAlertCircle className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Company Registration Required</h2>
+              <p className="text-sm text-[#8A8A93] leading-relaxed">
+                You must register your company details first before you can post a new job opening.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsAlertOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAlertOpen(false);
+                  router.push("/dashboard/recruiter/company");
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Register Company
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

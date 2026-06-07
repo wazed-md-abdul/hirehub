@@ -7,7 +7,7 @@ const DashboardLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex bg-[#09090B] relative ">
+        <div className="flex bg-[#09090B] relative min-h-screen">
             {/* Backdrop for mobile */}
             {isSidebarOpen && (
                 <div
@@ -20,12 +20,12 @@ const DashboardLayout = ({ children }) => {
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
                 <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
                 {/* Content Body */}
-                <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 flex flex-col">
                     {children}
                 </div>
             </div>

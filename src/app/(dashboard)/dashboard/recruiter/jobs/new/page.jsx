@@ -1,10 +1,19 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiArrowLeft, FiBriefcase, FiDollarSign, FiMapPin, FiCalendar, FiFileText } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
+import { getCompanies } from "@/lib/actions/companies";
 import { createJob } from "@/lib/actions/jobs";
+import { FiArrowLeft, FiBriefcase, FiDollarSign, FiMapPin, FiCalendar, FiFileText, FiAlertCircle } from "react-icons/fi";
 
 const NewJobPage = () => {
+  const { data: session, isPending: sessionPending } = useSession();
+  const [company, setCompany] = useState(null);
+  const [loadingCompany, setLoadingCompany] = useState(true);
+  const router = useRouter();
+
   const initialFormState = {
     title: "",
     category: "Engineering",
@@ -23,6 +32,27 @@ const NewJobPage = () => {
 
   const [formData, setFormData] = useState(initialFormState);
 
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      if (sessionPending) return;
+      if (!session?.user?.id) {
+        setLoadingCompany(false);
+        return;
+      }
+      try {
+        const data = await getCompanies(session.user.id);
+        if (data && data.length > 0) {
+          setCompany(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching company details:", error);
+      } finally {
+        setLoadingCompany(false);
+      }
+    };
+    fetchCompanyData();
+  }, [session, sessionPending]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -34,30 +64,80 @@ const NewJobPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!company) {
+      return;
+    }
 
     const payload = {
       ...formData,
-      company: "TechFlow Inc.", // Auto-filled mock company
-      companyId: 'company_123',
+      company: company, // Store the complete company object
+      companyName: company.name,
+      companyLogo: company.logo,
+      companyId: company._id,
+      userId: session.user.id,
       status: 'active',
       isPubliclyVisible: true,
     };
 
-
     const response = await createJob(payload);
 
-    if (response.acknowledged === true) {
+    if (response.acknowledged === true || response._id || response.success) {
       alert("Job posted successfully!");
+      setFormData(initialFormState);
+      router.push("/dashboard/recruiter/jobs");
     } else {
       alert("Failed to post job. Please try again.");
     }
-
-    // Reset the form state / refresh the page fields
-    setFormData(initialFormState);
   };
 
+  if (sessionPending || loadingCompany) {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+          <p className="text-xs text-[#8A8A93]">Loading details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="text-center space-y-4">
+          <h2 className="text-xl font-bold">Access Denied</h2>
+          <p className="text-sm text-[#8A8A93]">Please sign in to post a job.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="max-w-md w-full bg-[#121217] border border-white/5 rounded-[24px] p-8 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+            <FiAlertCircle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold">Company Registration Required</h2>
+            <p className="text-sm text-[#8A8A93] leading-relaxed">
+              You must register your organization before posting any job listings.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/recruiter/company")}
+            className="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-sm transition-all focus:outline-none cursor-pointer"
+          >
+            Go to Company Registration
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-6 md:p-8 bg-[#09090B]">
+    <div className="flex-1 p-4 sm:p-6 md:p-8 bg-[#09090B] min-h-screen text-white">
       {/* Header and Back Button */}
       <div className="max-w-7xl mx-auto mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -78,7 +158,7 @@ const NewJobPage = () => {
       <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
         {/* Left Column: Job Info */}
-        <div className="bg-[#121217] border border-white/5 rounded-[24px] p-6 md:p-8 space-y-6">
+        <div className="bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-3 border-b border-white/5 pb-4">
             <FiBriefcase className="text-violet-400 w-5 h-5" />
             <h2 className="text-white font-bold text-base">Job Info</h2>
@@ -102,36 +182,50 @@ const NewJobPage = () => {
             {/* Job Category */}
             <div className="flex flex-col gap-2">
               <label className="text-white font-semibold text-sm">Job Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm"
-              >
-                <option value="Engineering">Engineering</option>
-                <option value="Design">Design</option>
-                <option value="Product">Product Management</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
-                <option value="Data Science">Data Science</option>
-              </select>
+              <div className="relative">
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm appearance-none cursor-pointer pr-10"
+                >
+                  <option value="Engineering">Engineering</option>
+                  <option value="Design">Design</option>
+                  <option value="Product">Product Management</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Data Science">Data Science</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8A8A93]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Job Type */}
             <div className="flex flex-col gap-2">
               <label className="text-white font-semibold text-sm">Job Type</label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm"
-              >
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Remote">Remote Only</option>
-                <option value="Contract">Contract</option>
-                <option value="Internship">Internship</option>
-              </select>
+              <div className="relative">
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  className="w-full bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm appearance-none cursor-pointer pr-10"
+                >
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Remote">Remote Only</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8A8A93]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Application Deadline */}
@@ -176,16 +270,23 @@ const NewJobPage = () => {
                 placeholder="Max Salary"
                 className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm"
               />
-              <select
-                name="currency"
-                value={formData.currency}
-                onChange={handleChange}
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
+              <div className="relative">
+                <select
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleChange}
+                  className="w-full bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all text-sm appearance-none cursor-pointer pr-10"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8A8A93]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -239,7 +340,7 @@ const NewJobPage = () => {
         {/* Right Column: Job Description, Company & Actions */}
         <div className="space-y-6">
           {/* Job Description card */}
-          <div className="bg-[#121217] border border-white/5 rounded-[24px] p-6 md:p-8 space-y-6">
+          <div className="bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 md:p-8 space-y-6">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4">
               <FiFileText className="text-violet-400 w-5 h-5" />
               <h2 className="text-white font-bold text-base">Job Description</h2>
@@ -255,7 +356,7 @@ const NewJobPage = () => {
                 value={formData.responsibilities}
                 onChange={handleChange}
                 placeholder="Detail the primary duties and responsibilities..."
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y"
+                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y font-sans"
               ></textarea>
             </div>
 
@@ -269,7 +370,7 @@ const NewJobPage = () => {
                 value={formData.requirements}
                 onChange={handleChange}
                 placeholder="List down prerequisites, experience, and certifications..."
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y"
+                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y font-sans"
               ></textarea>
             </div>
 
@@ -282,23 +383,34 @@ const NewJobPage = () => {
                 value={formData.benefits}
                 onChange={handleChange}
                 placeholder="Perks, insurance, allowances..."
-                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y"
+                className="bg-[#0C0C10] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-[#6B6B75] text-sm resize-y font-sans"
               ></textarea>
             </div>
           </div>
 
           {/* Company details */}
-          <div className="bg-[#121217] border border-white/5 rounded-[24px] p-6 md:p-8 space-y-4">
+          <div className="bg-[#121217] border border-white/5 rounded-[24px] p-4 sm:p-6 md:p-8 space-y-4">
             <label className="text-[#8A8A93] font-semibold text-xs uppercase tracking-wider">
               Posting Organization
             </label>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                T
-              </div>
+              {company?.logo ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={company.logo}
+                  alt={company.name}
+                  className="w-12 h-12 rounded-xl object-cover border border-white/10"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                  {company?.name ? company.name[0].toUpperCase() : "C"}
+                </div>
+              )}
               <div className="flex flex-col">
-                <span className="text-white font-bold text-sm">TechFlow Inc.</span>
-                <span className="text-[#8A8A93] text-xs">Auto-filled (Approved Company)</span>
+                <span className="text-white font-bold text-sm">{company?.name || "No Company"}</span>
+                <span className="text-[#8A8A93] text-xs capitalize">
+                  Auto-filled ({company?.status || "Pending"} Company)
+                </span>
               </div>
             </div>
           </div>
@@ -306,7 +418,7 @@ const NewJobPage = () => {
           {/* Actions */}
           <div className="flex items-center justify-end gap-4 pt-2">
             <Link
-              href="/dashboard/recruiter"
+              href="/dashboard/recruiter/jobs"
               className="px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-white font-semibold text-sm transition-all focus:outline-none"
             >
               Cancel
