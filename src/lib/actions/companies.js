@@ -12,8 +12,8 @@ export const createCompany = async (newCompanyData) => {
     return res.json();
 };
 
-export const getCompanies = async () => {
-    const res = await fetch(`${baseUrl}/api/companies`, {
+export const getCompanies = async (userId) => {
+    const res = await fetch(`${baseUrl}/api/companies/${userId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
