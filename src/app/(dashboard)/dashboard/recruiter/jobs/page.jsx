@@ -35,19 +35,33 @@ const ManageJobsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isPendingAlertOpen, setIsPendingAlertOpen] = useState(false);
+  const [isRejectedAlertOpen, setIsRejectedAlertOpen] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const router = useRouter();
   const userId = session?.user?.id;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const fetchCompanyAndJobs = async () => {
     if (!userId) return;
     setLoading(true);
     try {
-      const companyData = await getCompanies(userId);
-      if (companyData && companyData.length > 0) {
-        const activeCompany = companyData[0];
-        setCompany(activeCompany);
-        const jobsData = await getJobs(activeCompany._id);
+      let activeCompany = company;
+      if (!activeCompany) {
+        const companyData = await getCompanies(userId);
+        if (companyData && companyData.length > 0) {
+          activeCompany = companyData[0];
+          setCompany(activeCompany);
+        }
+      }
+      if (activeCompany) {
+        const jobsData = await getJobs(activeCompany._id, null, null, debouncedSearch);
         setJobs(jobsData || []);
       } else {
         setCompany(null);
@@ -64,7 +78,7 @@ const ManageJobsPage = () => {
     if (!sessionPending && userId) {
       fetchCompanyAndJobs();
     }
-  }, [userId, sessionPending]);
+  }, [userId, sessionPending, debouncedSearch]);
 
   const handleDeleteTrigger = (jobId) => {
     setJobToDelete(jobId);
@@ -124,24 +138,19 @@ const ManageJobsPage = () => {
   const handlePostJobClick = () => {
     if (!company) {
       setIsAlertOpen(true);
+    } else if (company.status === "rejected") {
+      setIsRejectedAlertOpen(true);
     } else if (company.status === "pending") {
       setIsPendingAlertOpen(true);
-    } else {
+    } else if (company.status === "approved") {
       router.push("/dashboard/recruiter/jobs/new");
+    } else {
+      setIsPendingAlertOpen(true);
     }
   };
 
-  // Filter jobs based on search query
-  const filteredJobs = jobs.filter((job) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      job.title?.toLowerCase().includes(query) ||
-      job.category?.toLowerCase().includes(query) ||
-      job.type?.toLowerCase().includes(query) ||
-      job.city?.toLowerCase().includes(query) ||
-      job.country?.toLowerCase().includes(query)
-    );
-  });
+  // Filtered jobs are fetched directly from backend
+  const filteredJobs = jobs;
 
   if (sessionPending) {
     return (
@@ -459,6 +468,48 @@ const ManageJobsPage = () => {
                 className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer"
               >
                 View Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Shadcn UI Alert for Rejected Registration */}
+      {isRejectedAlertOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            onClick={() => setIsRejectedAlertOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="bg-[#121217] border border-white/10 rounded-[24px] w-full max-w-md p-6 md:p-8 z-10 shadow-2xl relative text-white space-y-6">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <FiAlertCircle className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Company Registration Rejected</h2>
+              <p className="text-sm text-[#8A8A93] leading-relaxed">
+                Your company <span className="text-white font-semibold">{company?.name}</span> registration has been rejected by the administrator. You cannot post job openings until you update your details and get approved.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsRejectedAlertOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectedAlertOpen(false);
+                  router.push("/dashboard/recruiter/company");
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer"
+              >
+                Go to Company Page
               </button>
             </div>
           </div>

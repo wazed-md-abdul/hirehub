@@ -12,7 +12,8 @@ import {
   FiClock,
   FiCheckCircle,
   FiEdit,
-  FiTrash2
+  FiTrash2,
+  FiAlertCircle
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +24,7 @@ const CompanyPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRejectedDialogOpen, setIsRejectedDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const userId = session?.user?.id;
@@ -34,6 +36,9 @@ const CompanyPage = () => {
     try {
       const data = await getCompanies(userId);
       setCompanies(data);
+      if (data && data.length > 0 && data[0].status === "rejected") {
+        setIsRejectedDialogOpen(true);
+      }
     } catch (error) {
       console.error("Error loading companies:", error);
     } finally {
@@ -181,15 +186,20 @@ const CompanyPage = () => {
             <div className="h-32 sm:h-48 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 relative">
               {/* Status Badge in Banner */}
               <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-                {company.status === "pending" ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-amber-500/10 border-amber-500/20 text-amber-400">
-                    <FiClock className="w-3.5 h-3.5 animate-pulse" />
-                    Pending Approval
-                  </span>
-                ) : (
+                {company.status === "approved" ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
                     <FiCheckCircle className="w-3.5 h-3.5" />
                     Approved Company
+                  </span>
+                ) : company.status === "rejected" ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-rose-500/10 border-rose-500/20 text-rose-400 cursor-pointer" onClick={() => setIsRejectedDialogOpen(true)}>
+                    <FiAlertCircle className="w-3.5 h-3.5" />
+                    Rejected Company
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border bg-amber-500/10 border-amber-500/20 text-amber-400">
+                    <FiClock className="w-3.5 h-3.5 animate-pulse" />
+                    Pending Approval
                   </span>
                 )}
               </div>
@@ -330,6 +340,62 @@ const CompanyPage = () => {
                 ) : (
                   "Yes, Delete Company"
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Company Dialogue */}
+      {isRejectedDialogOpen && company && company.status === "rejected" && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            onClick={() => setIsRejectedDialogOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="bg-[#121217] border border-white/10 rounded-[24px] w-full max-w-md p-6 md:p-8 z-10 shadow-2xl relative text-white space-y-6">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <FiAlertCircle className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Company Registration Rejected</h2>
+              <p className="text-sm text-[#8A8A93] leading-relaxed">
+                Unfortunately, your registration request for <span className="text-white font-semibold">{company.name}</span> has been rejected by the administrator. 
+              </p>
+              <p className="text-xs text-[#8A8A93] leading-relaxed bg-rose-500/5 border border-rose-500/10 rounded-xl p-3.5">
+                Please review and edit your company information, or delete the current submission to start over.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsRejectedDialogOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white text-sm font-semibold transition-all focus:outline-none cursor-pointer text-center"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectedDialogOpen(false);
+                  setIsDeleteDialogOpen(true);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-sm font-semibold transition-all focus:outline-none cursor-pointer text-center"
+              >
+                Delete Company
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectedDialogOpen(false);
+                  setEditData(company);
+                  setIsModalOpen(true);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-black text-sm font-semibold transition-all focus:outline-none cursor-pointer text-center"
+              >
+                Edit Details
               </button>
             </div>
           </div>

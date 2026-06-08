@@ -64,7 +64,7 @@ const NewJobPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!company || company.status === "pending") {
+    if (!company || company.status !== "approved") {
       return;
     }
 
@@ -78,6 +78,7 @@ const NewJobPage = () => {
       status: 'active',
       isPubliclyVisible: true,
     };
+    console.log("payload", payload);
 
     const response = await createJob(payload);
 
@@ -130,6 +131,30 @@ const NewJobPage = () => {
             className="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-sm transition-all focus:outline-none cursor-pointer"
           >
             Go to Company Registration
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (company.status === "rejected") {
+    return (
+      <div className="flex-1 p-6 md:p-8 bg-[#09090B] min-h-screen flex items-center justify-center text-white">
+        <div className="max-w-md w-full bg-[#121217] border border-white/5 rounded-[24px] p-8 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+            <FiAlertCircle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold">Company Registration Rejected</h2>
+            <p className="text-sm text-[#8A8A93] leading-relaxed">
+              Your company <span className="text-white font-semibold">{company.name}</span> registration has been rejected. You cannot post job openings.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/recruiter/company")}
+            className="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-bold text-sm transition-all focus:outline-none cursor-pointer"
+          >
+            Go to Company Page to Edit
           </button>
         </div>
       </div>
