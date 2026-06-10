@@ -52,8 +52,7 @@ const JobDetailsPage = () => {
 
   const handleApply = () => {
     if (isRecruiter) return;
-    setApplied(true);
-    alert("Application submitted successfully!");
+    router.push(`/jobs/${id}/apply`);
   };
 
   if (loading) {

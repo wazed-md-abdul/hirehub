@@ -43,3 +43,26 @@ export const deleteCompany = async (id) => {
     });
     return res.json();
 };
+
+export const getAllCompanies = async () => {
+    const res = await fetch(`${baseUrl}/api/companies`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        next: { revalidate: 0 }
+    });
+    return res.json();
+};
+
+export const getCompanyById = async (id) => {
+    const res = await fetch(`${baseUrl}/api/company/${id}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        next: { revalidate: 0 }
+    });
+    if (!res.ok) return null;
+    return res.json();
+};
