@@ -132,22 +132,20 @@ export default function PricingPage() {
           <div className="bg-[#121217] border border-white/5 p-1.5 rounded-full flex gap-1 shadow-inner relative">
             <button
               onClick={() => setBillingType("seekers")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
-                billingType === "seekers"
-                  ? "bg-white text-black shadow-lg"
-                  : "text-[#8A8A93] hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${billingType === "seekers"
+                ? "bg-white text-black shadow-lg"
+                : "text-[#8A8A93] hover:text-white"
+                }`}
             >
               <FiUser className="text-lg" />
               For Job Seekers
             </button>
             <button
               onClick={() => setBillingType("recruiters")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
-                billingType === "recruiters"
-                  ? "bg-white text-black shadow-lg"
-                  : "text-[#8A8A93] hover:text-white"
-              }`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${billingType === "recruiters"
+                ? "bg-white text-black shadow-lg"
+                : "text-[#8A8A93] hover:text-white"
+                }`}
             >
               <FiBriefcase className="text-lg" />
               For Recruiters
@@ -160,11 +158,10 @@ export default function PricingPage() {
           {activePlans.map((plan, index) => (
             <div
               key={plan.name}
-              className={`bg-[#121217] border rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative transition-all duration-300 hover:translate-y-[-6px] ${
-                plan.popular
-                  ? "border-violet-500/30 ring-1 ring-violet-500/30"
-                  : "border-white/5 hover:border-white/10"
-              }`}
+              className={`bg-[#121217] border rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative transition-all duration-300 hover:translate-y-[-6px] ${plan.popular
+                ? "border-violet-500/30 ring-1 ring-violet-500/30"
+                : "border-white/5 hover:border-white/10"
+                }`}
             >
               {/* Popular Badge */}
               {plan.popular && (
@@ -202,14 +199,20 @@ export default function PricingPage() {
 
               {/* CTA Button */}
               <div className="pt-8 mt-auto">
-                <button
-                  className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer active:scale-98 ${
-                    plan.popular
+                <form action="/api/checkout_sessions" method="POST">
+                  <section>
+                    <button className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer active:scale-98 ${plan.popular
                       ? "bg-white text-black hover:bg-gray-100 shadow-[0_4px_20px_rgba(255,255,255,0.05)]"
                       : "bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 text-white"
-                  }`}
+                      }`} type="submit" role="link">
+                      {plan.cta}
+                    </button>
+                  </section>
+                </form>
+                <button
+
                 >
-                  {plan.cta}
+
                 </button>
               </div>
             </div>
