@@ -9,6 +9,7 @@ export default function PricingPage() {
   const seekerPlans = [
     {
       name: "Free",
+      id: "seeker_free_plan",
       price: "$0",
       period: "forever",
       description: "Get started and find your first opportunity.",
@@ -24,6 +25,7 @@ export default function PricingPage() {
     },
     {
       name: "Pro",
+      id: "seeker_pro_plan",
       price: "$19",
       period: "month",
       description: "Perfect for active job seekers looking for an edge.",
@@ -39,6 +41,7 @@ export default function PricingPage() {
     },
     {
       name: "Premium",
+      id: "seeker_premium_plan",
       price: "$39",
       period: "month",
       description: "Everything you need for full career acceleration.",
@@ -58,6 +61,7 @@ export default function PricingPage() {
   const recruiterPlans = [
     {
       name: "Free",
+      id: "recruiter_free_plan",
       price: "$0",
       period: "forever",
       description: "Basic features for growing your team.",
@@ -73,6 +77,7 @@ export default function PricingPage() {
     },
     {
       name: "Growth",
+      id: "recruiter_growth_plan",
       price: "$49",
       period: "month",
       description: "Expanded job posts and tools for growing companies.",
@@ -88,6 +93,7 @@ export default function PricingPage() {
     },
     {
       name: "Enterprise",
+      id: "recruiter_enterprise_plan",
       price: "$149",
       period: "month",
       description: "Advanced branding, security and analytics for teams.",
@@ -200,6 +206,7 @@ export default function PricingPage() {
               {/* CTA Button */}
               <div className="pt-8 mt-auto">
                 <form action="/api/checkout_sessions" method="POST">
+                  <input type='hidden' name='plan_id' value={plan.id} />
                   <section>
                     <button className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer active:scale-98 ${plan.popular
                       ? "bg-white text-black hover:bg-gray-100 shadow-[0_4px_20px_rgba(255,255,255,0.05)]"

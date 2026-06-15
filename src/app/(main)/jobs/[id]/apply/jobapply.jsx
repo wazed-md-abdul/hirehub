@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 import { getJobById } from "@/lib/api/jobs";
-import { createApplication } from "@/lib/actions/application";
+import { createApplication, getApplications } from "@/lib/actions/application";
 import {
   FiArrowLeft,
   FiBriefcase,
@@ -25,6 +25,8 @@ export default function JobApply() {
   const { id } = useParams();
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = useSession();
+  const userId = session?.user?.id || null;
+  const [applications, setApplications] = useState([]);
   
   const [job, setJob] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
@@ -56,6 +58,8 @@ export default function JobApply() {
   // Fetch job details
   useEffect(() => {
     const fetchJob = async () => {
+      const applicants = await getApplications(userId);
+      setApplications(applicants);
       if (!id) return;
       setLoadingJob(true);
       try {
@@ -68,7 +72,7 @@ export default function JobApply() {
       }
     };
     fetchJob();
-  }, [id]);
+  }, [id, userId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -204,7 +208,40 @@ export default function JobApply() {
   return (
     <div className="bg-[#0B0B0F] min-h-screen text-white pt-28 pb-24 font-sans">
       <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-6xl space-y-8">
-        
+        {/* Monthly Application Limit Progress Bar */}
+        <div className="w-full bg-[#121217]/50 backdrop-blur-sm border border-white/5 rounded-3xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-violet-500 to-fuchsia-500"></div>
+          <div className="pl-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-xl font-bold text-white">Monthly Application Status</h1>
+                <p className="text-xs text-[#8A8A93] mt-0.5">Based on your current plan's application limit.</p>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="text-2xl font-black text-white">{applications.length}</span>
+                <span className="text-[#8A8A93] text-sm"> / 3 applied this month</span>
+              </div>
+            </div>
+            <div className="w-full bg-white/[0.03] rounded-full h-3 overflow-hidden border border-white/5 relative">
+              <div
+                className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
+                  applications.length >= 3 
+                    ? "from-rose-500 to-red-500" 
+                    : "from-violet-500 to-fuchsia-500"
+                }`}
+                style={{ width: `${Math.min((applications.length / 3) * 100, 100)}%` }}
+              />
+            </div>
+            {applications.length >= 3 && (
+              <div className="mt-4 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-xs text-rose-300">You have reached the monthly application limit of your Free plan.</p>
+                <Link href="/pricing" className="text-xs font-semibold text-rose-400 hover:text-rose-300 hover:underline">
+                  Upgrade to Pro for Unlimited Applications &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
         {/* Back Link */}
         <Link
           href={`/jobs/${id}`}

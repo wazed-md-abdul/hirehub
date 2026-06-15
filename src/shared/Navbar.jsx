@@ -17,10 +17,7 @@ const Navbar = () => {
 
     const handleSignOut = async () => {
         await authClient.signOut();
-        setTimeout(() => {
-            router.refresh();
-            router.push("/");
-        }, 1000);
+        router.refresh();
 
     };
 
