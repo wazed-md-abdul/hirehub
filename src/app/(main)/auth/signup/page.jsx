@@ -14,6 +14,7 @@ const SignUpPage = () => {
         image: "", // We'll use a string URL for simplicity. Better Auth also accepts a File object.
         password: "",
         role: "seeker",
+        plan: "seeker_free_plan",
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -23,9 +24,9 @@ const SignUpPage = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        console.log(formData);
+     
     };
-
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -40,7 +41,7 @@ const SignUpPage = () => {
                 name: formData.name,
                 image: formData.image || undefined,
                 role: formData.role,
-
+                plan: `${formData.role}_free_plan`
             });
 
             if (error) {
